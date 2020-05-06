@@ -31,7 +31,7 @@ def find_images(root_directory, parent_directory = None):
     return images
 
 def measure(data):
-    source, target, image = data
+    source, target, ssim_window, image = data
     source_image_path = os.path.join(source,image)
     target_image_path = os.path.join(target,image)
     if not os.path.exists(source_image_path):
@@ -40,14 +40,16 @@ def measure(data):
         raise FileNotFoundError("Cannot find {}".format(target_image_path))
     source_image = imread(source_image_path)
     target_image = imread(target_image_path)
-    ssim = structural_similarity(source_image,target_image,win_size=11, multichannel=True)
-    psnr = peak_signal_noise_ratio(source_image,target_image,data_range=255)
+    if source_image.shape != target_image.shape:
+        raise RuntimeError("{} and {} should have same image size".format(source_image_path, target_image_path))
+    ssim = structural_similarity(source_image,target_image, win_size=ssim_window, multichannel=True)
+    psnr = peak_signal_noise_ratio(source_image,target_image, data_range=255)
     return ssim, psnr
 
 def thread_measurement(images, args):
     result = []
-    with Pool(1) as pool:
-        data = [(args.source, args.target, img) for img in images]
+    with Pool(args.threads) as pool:
+        data = [(args.source, args.target, args.ssim_window, img) for img in images]
         result = pool.map(measure, data)
     return zip(*result)
 
@@ -76,6 +78,11 @@ def entry_point():
         default=8,
         type=int,
         help="number of pararell threads (default: 8)"
+    )
+    parser.add_argument('--ssim-window',
+        default=11,
+        type=int,
+        help="ssim windows size (odd integer only) (default: 11)"
     )
     parser.add_argument('--mute',
         action="store_true",
