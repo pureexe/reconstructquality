@@ -2,3 +2,6 @@
 source/
 target/
 teabottle_green/
+__pycache__/
+*.egg-info/
+*.csv
