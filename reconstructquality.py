@@ -64,7 +64,8 @@ def main(args):
         'SSIM': ssims,
     })
     if args.csv != '':
-        df.to_csv(args.csv, index=False)
+        csv_name = args.csv if '.csv' in args.csv else '{}.csv'.format(args.csv)
+        df.to_csv(csv_name, index=False)
     if not args.mute:
         df['directory'] =  [os.path.dirname(image) for image in images]
         print("------------------------------------")
